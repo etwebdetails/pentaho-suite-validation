@@ -9,6 +9,7 @@ import platform
 import subprocess
 import time
 import shutil
+import read as rd
 
 # -------------------------------------------------------
 #
@@ -257,13 +258,6 @@ def start(product_name):
             log.debug('Copy files. File2: [' + pentaho_server_dir + ']')
             shutil.copy2(local_resource, pentaho_server_dir)
 
-        # copy cgg-sample-data to 'pentaho server\pentaho solutions\system\default content'
-        local_resource_cgg_file = os.path.normpath('.\\resource\\' + 'cgg-sample-data.zip')
-        default_content_path = os.path.join(pentaho_server_dir, 'pentaho-solutions\system\default-content')
-        log.debug('Location of cgg [' + local_resource_cgg_file + '].')
-        log.debug('Location of default-content [' + default_content_path + '].')
-        shutil.copy2(local_resource_cgg_file, default_content_path)
-
         # Let's invoke the start
         log.debug('Start script: [' + product_start_script + ']')
         return_code = subprocess.Popen(product_start_script, shell=True).wait()
@@ -356,6 +350,22 @@ def stop(product_name):
 
 # -------------------------------------------------------
 #
+#                          READ
+#
+# -------------------------------------------------------
+def read(product_name):
+    log.debug('Let\'s going read [' + product_name + ']')
+    product_dir = os.path.join(download_store_path, product_name)
+
+    if not os.path.exists(product_dir):
+        log.debug('The folder [' + product_dir + '] does not exist!')
+        sys.exit(2)
+
+    rd.read_logs(product_name, product_dir)
+
+
+# -------------------------------------------------------
+#
 #                     MAIN FUNCTION
 #
 # -------------------------------------------------------
@@ -365,6 +375,7 @@ def main(argv):
     # - "-c" "stop" <artifact_name>: plus the name of the artifact to stop
     # - "-d" "download": downlaod all artifacts from the current list
     # - "-b" "branch": version that we want to download or start or stop a tool
+    # - "-r" "read": in order to validated the logging tool
     #
     # Examples:
     #           python run.py -d
@@ -375,7 +386,7 @@ def main(argv):
         sys.exit(2)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "s:c:db:", ["start=", "stop=", "download", "branch="])
+        opts, args = getopt.getopt(sys.argv[1:], "s:c:d:b:r:", ["start=", "stop=", "download", "branch=", "read="])
     except getopt.GetoptError as err:
         log.debug(err)
         sys.exit(2)
@@ -387,6 +398,7 @@ def main(argv):
     has_branch = False
     is_start = False
     is_stop = False
+    is_read = False
     tool_arg = ''
     branch_arg = ''
     for opt, arg in opts:
@@ -409,8 +421,13 @@ def main(argv):
             log.debug('---')
             has_branch = True
             branch_arg = arg
+        elif opt in ('-r', '--read'):
+            log.debug('Going to read: ' + arg)
+            log.debug('---')
+            is_read = True
+            tool_arg = arg
 
-    if has_branch and (to_download or is_start or is_stop):
+    if has_branch and (to_download or is_start or is_stop or is_read):
         set_branch(branch_arg)
         set_download_store()
     else:
@@ -422,8 +439,10 @@ def main(argv):
         start(tool_arg)
     elif is_stop and has_branch:
         stop(tool_arg)
+    elif is_read and has_branch:
+        read(tool_arg)
     else:
-        log.debug('In order to download, start or stop, you must specified a branch.')
+        log.debug('In order to download, start, stop or read, you must specified a branch.')
         sys.exit(2)
 
 
