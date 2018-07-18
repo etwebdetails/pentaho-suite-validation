@@ -266,8 +266,11 @@ def start_psw_ce(download_store_path):
         log.debug('[PSW-CE] No Error message found.')
     else:
         log.error('[PSW-CE] Schema workbench started with errors check them:')
-        log.info(process_output)
         exitcode_psw_logs = -1
+
+    log.debug('---- BEGIN LOGS ----')
+    log.debug(process_output)
+    log.debug('---- END LOGS ----')
 
     exit(exitcode_psw_logs)
 
@@ -306,8 +309,11 @@ def start_psw_ee(download_store_path):
         log.debug('[PSW-EE] No Error message found.')
     else:
         log.error('[PSW-EE] Schema workbench started with errors check them:')
-        log.info(process_output)
         exitcode_psw_logs = -1
+
+    log.debug('---- BEGIN LOGS ----')
+    log.debug(process_output)
+    log.debug('---- END LOGS ----')
 
     exit(exitcode_psw_logs)
 
