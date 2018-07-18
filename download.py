@@ -49,8 +49,6 @@ glist_download_artifacts = ['psw-ce']
 #
 # -------------------------------------------------------
 def get_download(branch, download_store_path, list_products):
-    require_version_check = False
-    need_download_new_build = True
     site_url = 'http://lisbon-build.pentaho.com/hosted/' + branch + '/latest/'
     file_build_info = 'build.info'
 
@@ -86,6 +84,8 @@ def get_download(branch, download_store_path, list_products):
 
     for filename in list_download_artifacts:
         try:
+            require_version_check = False
+            need_download_new_build = True
             log.debug('-------')
             log.debug('DOWNLOADING [' + filename + ']')
             log.debug('-------')
