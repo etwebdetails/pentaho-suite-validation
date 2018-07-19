@@ -19,7 +19,7 @@ log = logging.getLogger()
 #            Start Pentaho Server CE
 #
 # -------------------------------------------------------
-def start_pentaho_server_ce(download_store_pathiu):
+def start_pentaho_server_ce(download_store_path):
     log.info('Starting Pentaho Server CE.')
     product_start_script_win = 'start-pentaho.bat'
     product_start_script_lix = 'start-pentaho.sh'
