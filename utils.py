@@ -4,6 +4,7 @@ import urllib.request
 import os
 import subprocess
 import zipfile
+import time
 
 # Initialize logger
 fileConfig('logging_config.ini')
@@ -84,19 +85,7 @@ def unzip_single_file(download_store_path, filename):
     log.debug('Store the unzip file at [' + new_file_path + ']')
     zipref.extractall(new_file_path)
     zipref.close()
-
-
-log.debug('Done unzip!')
-
-
-# -------------------------------------------------------
-#
-#                 READ LINE and APPEND Text
-#
-# -------------------------------------------------------
-def read_and_append(file, string_to_find, string_to_append):
-    fo_file_to_read = open(file, "wr")
-    read_pentaho_file = fo_pentaho_logs.read().lower()
+    log.debug('Done unzip!')
 
 
 # -------------------------------------------------------
@@ -106,3 +95,4 @@ def read_and_append(file, string_to_find, string_to_append):
 # -------------------------------------------------------
 def kill_command_process(ppid):
     subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=ppid))
+    time.sleep(2)

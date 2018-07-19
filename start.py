@@ -125,7 +125,7 @@ def start_pad_ce(download_store_path):
     log.info('[PAG-CE] Starting Pentaho Aggregation Designer CE.')
 
     # Phase 1 - Start workbench.
-    pad_ce_script = os.path.join(download_store_path, 'pad-ce', 'aggregation-designer', 'startaggregationdesigner.bat' )
+    pad_ce_script = os.path.join(download_store_path, 'pad-ce', 'aggregation-designer', 'startaggregationdesigner.bat')
     pad_ce_script = os.path.normpath(pad_ce_script)
     log.debug('Start script: [' + pad_ce_script + ']')
     pad_ce_process = subprocess.Popen(pad_ce_script.split(), shell=True, stdout=subprocess.PIPE)
@@ -165,7 +165,7 @@ def start_pad_ee(download_store_path):
     log.info('Starting Pentaho Aggregation Designer EE.')
 
     # Phase 1 - Start workbench.
-    pad_ee_script = os.path.join(download_store_path, 'pad-ee', 'aggregation-designer', 'startaggregationdesigner.bat' )
+    pad_ee_script = os.path.join(download_store_path, 'pad-ee', 'aggregation-designer', 'startaggregationdesigner.bat')
     pad_ee_script = os.path.normpath(pad_ee_script)
     log.debug('Start script: [' + pad_ee_script + ']')
     pad_ee_process = subprocess.Popen(pad_ee_script.split(), shell=True, stdout=subprocess.PIPE)
@@ -237,42 +237,47 @@ def start_prd_ee(download_store_path):
 #                     Start PSW CE
 #
 # -------------------------------------------------------
-def start_psw_ce(download_store_path):
+def start_psw(download_store_path, product_name):
     log.info('Starting Pentaho Schema Workbench CE.')
 
+    # Phase 0 - copy the workbench.bat file to the installation.
+    psw_installation = os.path.join(download_store_path, product_name, 'schema-workbench')
+    local_resource_psw_batch = os.path.join('.\\resource', 'psw', 'workbench.bat')
+    local_resource_psw_log4j = os.path.join('.\\resource', 'psw', 'log4j.xml')
+    log.debug('Location of ' + product_name + ' batch [' + local_resource_psw_batch + '].')
+    shutil.copy2(local_resource_psw_batch, psw_installation)
+    shutil.copy2(local_resource_psw_log4j, psw_installation)
+
+    # Remove log file if exist
+    psw_log_file = os.path.join(psw_installation, 'schemaworkbench.log')
+    psw_log2_file = os.path.join(psw_installation, 'schemaworkbench2.log')
+    if os.path.isfile(psw_log_file):
+        os.remove(psw_log_file)
+    if os.path.isfile(psw_log2_file):
+        os.remove(psw_log2_file)
+
     # Phase 1 - Start workbench.
-    psw_ce_script = os.path.join(download_store_path, 'psw-ce', 'schema-workbench', 'workbench.bat' )
-    psw_ce_script = os.path.normpath(psw_ce_script)
-    log.debug('Start script: [' + psw_ce_script + ']')
-    psw_ce_process = subprocess.Popen(psw_ce_script.split(), shell=True, stdout=subprocess.PIPE)
+    psw_script = os.path.join(download_store_path, product_name, 'schema-workbench', 'workbench.bat')
+    psw_script = os.path.normpath(psw_script)
+    log.debug('Start script: [' + psw_script + ']')
+    psw_process = subprocess.Popen(psw_script.split(), shell=True, stdout=subprocess.PIPE)
     try:
-        psw_ce_process.wait(timeout=15)
+        psw_process.wait(timeout=15)
     except subprocess.TimeoutExpired as te:
         log.debug("Timeout expired - we kill the app.")
 
-    log.debug('Script executed. Return code [' + str(psw_ce_process.returncode) + '].')
-    if psw_ce_process.returncode != 0 and psw_ce_process.returncode is not None:
+    log.debug('Script executed. Return code [' + str(psw_process.returncode) + '].')
+    if psw_process.returncode != 0 and psw_process.returncode is not None:
         log.debug('Something when wrong.')
-        exit(psw_ce_process.returncode)
+        exit(psw_process.returncode)
     log.debug('Successful launched.')
 
     # Phase 3 - Evaluate the logs
-    utils.kill_command_process(psw_ce_process.pid)
-    process_output = psw_ce_process.communicate()[0].decode(encoding='windows-1252').lower()
+    utils.kill_command_process(psw_process.pid)
 
-    exitcode_psw_logs = 0
-    if process_output.find('error') == -1 and process_output.find('exception') == -1:
-        log.info('[PSW-CE] Schema workbench started successfully.')
-        log.debug('[PSW-CE] No Error message found.')
-    else:
-        log.error('[PSW-CE] Schema workbench started with errors check them:')
-        exitcode_psw_logs = -1
-
-    log.debug('---- BEGIN LOGS ----')
-    log.debug(process_output)
-    log.debug('---- END LOGS ----')
-
-    exit(exitcode_psw_logs)
+    # Phase 4 - read logs
+    process_output = psw_process.communicate()[0].decode(encoding='windows-1252').lower()
+    read.psw_logs(psw_installation, process_output)
 
 
 # -------------------------------------------------------
@@ -284,7 +289,7 @@ def start_psw_ee(download_store_path):
     log.info('Starting Pentaho Schema Workbench EE.')
 
     # Phase 1 - Start workbench.
-    psw_ee_script = os.path.join(download_store_path, 'psw-ee', 'schema-workbench', 'workbench.bat' )
+    psw_ee_script = os.path.join(download_store_path, 'psw-ee', 'schema-workbench', 'workbench.bat')
     psw_ee_script = os.path.normpath(psw_ee_script)
     log.debug('Start script: [' + psw_ee_script + ']')
     psw_ee_process = subprocess.Popen(psw_ee_script.split(), shell=True, stdout=subprocess.PIPE)
@@ -348,8 +353,8 @@ def start_tool(product_name, product_dir):
     elif product_name in 'prd-ee':
         start_prd_ee(product_dir)
     elif product_name in 'psw-ce':
-        start_psw_ce(product_dir)
+        start_psw(product_dir, product_name)
     elif product_name in 'psw-ee':
-        start_psw_ee(product_dir)
+        start_psw(product_dir, product_name)
     else:
         log.error('NOT SUPPORTED')
