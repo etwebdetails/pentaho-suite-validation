@@ -69,6 +69,7 @@ def start_pentaho_server_ce(download_store_path):
     url = 'http://localhost:8080/pentaho'
     # 360 => 6 minutes
     t = 0
+    exit_code = 0
     while True:
         http_code = utils.get_status_code(url)
         log.debug('Pentaho server status: [' + str(http_code) + ']')
@@ -121,11 +122,11 @@ def start_pdi_ee(download_store_path):
 #                     Start PAD CE
 #
 # -------------------------------------------------------
-def start_pad_ce(download_store_path):
-    log.info('[PAG-CE] Starting Pentaho Aggregation Designer CE.')
+def start_pad(download_store_path, product_name):
+    log.info('[PAG] Starting Pentaho Aggregation Designer - ' + product_name + '.')
 
     # Phase 1 - Start workbench.
-    pad_ce_script = os.path.join(download_store_path, 'pad-ce', 'aggregation-designer', 'startaggregationdesigner.bat')
+    pad_ce_script = os.path.join(download_store_path, product_name, 'aggregation-designer', 'startaggregationdesigner.bat')
     pad_ce_script = os.path.normpath(pad_ce_script)
     log.debug('Start script: [' + pad_ce_script + ']')
     pad_ce_process = subprocess.Popen(pad_ce_script.split(), shell=True, stdout=subprocess.PIPE)
@@ -146,52 +147,15 @@ def start_pad_ce(download_store_path):
 
     exitcode_psw_logs = 0
     if process_output.find('error') == -1 and process_output.find('exception') == -1:
-        log.info('[PAG-CE] Aggregation Designer started successfully.')
-        log.debug('[PAG-CE] No Error message found.')
+        log.info('[PAG] Aggregation Designer started successfully.')
+        log.debug('[PAG] No Error message found.')
     else:
-        log.error('[PAG-CE] Aggregation Designer started with errors check them:')
-        log.info(process_output)
+        log.error('[PAG] Aggregation Designer started with errors check them:')
         exitcode_psw_logs = -1
 
-    exit(exitcode_psw_logs)
-
-
-# -------------------------------------------------------
-#
-#                     Start PAD EE
-#
-# -------------------------------------------------------
-def start_pad_ee(download_store_path):
-    log.info('Starting Pentaho Aggregation Designer EE.')
-
-    # Phase 1 - Start workbench.
-    pad_ee_script = os.path.join(download_store_path, 'pad-ee', 'aggregation-designer', 'startaggregationdesigner.bat')
-    pad_ee_script = os.path.normpath(pad_ee_script)
-    log.debug('Start script: [' + pad_ee_script + ']')
-    pad_ee_process = subprocess.Popen(pad_ee_script.split(), shell=True, stdout=subprocess.PIPE)
-    try:
-        pad_ee_process.wait(timeout=15)
-    except subprocess.TimeoutExpired as te:
-        log.debug("Timeout expired - we kill the app.")
-
-    log.debug('Script executed. Return code [' + str(pad_ee_process.returncode) + '].')
-    if pad_ee_process.returncode != 0 and pad_ee_process.returncode is not None:
-        log.debug('Something when wrong.')
-        exit(pad_ee_process.returncode)
-    log.debug('Successful launched.')
-
-    # Phase 3 - Evaluate the logs
-    utils.kill_command_process(pad_ee_process.pid)
-    process_output = pad_ee_process.communicate()[0].decode(encoding='windows-1252').lower()
-
-    exitcode_psw_logs = 0
-    if process_output.find('error') == -1 and process_output.find('exception') == -1:
-        log.info('[PAG-EE] Aggregation Designer started successfully.')
-        log.debug('[PAG-EE] No Error message found.')
-    else:
-        log.error('[PAG-EE] Aggregation Designer started with errors check them:')
-        log.info(process_output)
-        exitcode_psw_logs = -1
+    log.debug('---- BEGIN LOGS ----')
+    log.debug(process_output)
+    log.debug('---- END LOGS ----')
 
     exit(exitcode_psw_logs)
 
@@ -282,49 +246,6 @@ def start_psw(download_store_path, product_name):
 
 # -------------------------------------------------------
 #
-#                     Start PSW EE
-#
-# -------------------------------------------------------
-def start_psw_ee(download_store_path):
-    log.info('Starting Pentaho Schema Workbench EE.')
-
-    # Phase 1 - Start workbench.
-    psw_ee_script = os.path.join(download_store_path, 'psw-ee', 'schema-workbench', 'workbench.bat')
-    psw_ee_script = os.path.normpath(psw_ee_script)
-    log.debug('Start script: [' + psw_ee_script + ']')
-    psw_ee_process = subprocess.Popen(psw_ee_script.split(), shell=True, stdout=subprocess.PIPE)
-    try:
-        psw_ee_process.wait(timeout=15)
-    except subprocess.TimeoutExpired as te:
-        log.debug("Timeout expired - we kill the app.")
-
-    log.debug('Script executed. Return code [' + str(psw_ee_process.returncode) + '].')
-    if psw_ee_process.returncode != 0 and psw_ee_process.returncode is not None:
-        log.debug('Something when wrong.')
-        exit(psw_ee_process.returncode)
-    log.debug('Successful launched.')
-
-    # Phase 3 - Evaluate the logs
-    utils.kill_command_process(psw_ee_process.pid)
-    process_output = psw_ee_process.communicate()[0].decode(encoding='windows-1252').lower()
-
-    exitcode_psw_logs = 0
-    if process_output.find('error') == -1 and process_output.find('exception') == -1:
-        log.info('[PSW-EE] Schema workbench started successfully.')
-        log.debug('[PSW-EE] No Error message found.')
-    else:
-        log.error('[PSW-EE] Schema workbench started with errors check them:')
-        exitcode_psw_logs = -1
-
-    log.debug('---- BEGIN LOGS ----')
-    log.debug(process_output)
-    log.debug('---- END LOGS ----')
-
-    exit(exitcode_psw_logs)
-
-
-# -------------------------------------------------------
-#
 #                      read_logs
 #
 # -------------------------------------------------------
@@ -341,9 +262,9 @@ def start_tool(product_name, product_dir):
     elif product_name in 'pdi-ee':
         start_pdi_ce(product_dir)
     elif product_name in 'pad-ce':
-        start_pad_ce(product_dir)
+        start_pad(product_dir, product_name)
     elif product_name in 'pad-ee':
-        start_pad_ee(product_dir)
+        start_pad(product_dir, product_name)
     elif product_name in 'pme-ce':
         start_pme_ce(product_dir)
     elif product_name in 'pme-ee':

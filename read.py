@@ -54,8 +54,13 @@ def pentaho_server_ce_logs(product_dir):
     exit(exitcode_pentaho_log | exitcode_catalina_log)
 
 
+# -------------------------------------------------------
+#
+#                READING LOGS of PSW
+#
+# -------------------------------------------------------
 def psw_logs(product_dir, proc_output):
-    log.info('Reading ---Pentho Schema Workbench logs---')
+    log.info('Reading ---Pentaho Schema Workbench logs---')
 
     #read file 1
     psw_log_file = os.path.join(product_dir, 'schemaworkbench.log')
