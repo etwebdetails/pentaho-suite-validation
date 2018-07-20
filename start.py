@@ -129,7 +129,7 @@ def start_pad(download_store_path, product_name):
     pad_ce_script = os.path.join(download_store_path, product_name, 'aggregation-designer', 'startaggregationdesigner.bat')
     pad_ce_script = os.path.normpath(pad_ce_script)
     log.debug('Start script: [' + pad_ce_script + ']')
-    pad_ce_process = subprocess.Popen(pad_ce_script.split(), shell=True, stdout=subprocess.PIPE)
+    pad_ce_process = subprocess.Popen(pad_ce_script.split(), shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     try:
         pad_ce_process.wait(timeout=15)
     except subprocess.TimeoutExpired as te:
@@ -165,17 +165,40 @@ def start_pad(download_store_path, product_name):
 #                     Start PME CE
 #
 # -------------------------------------------------------
-def start_pme_ce(download_store_path):
-    log.info('Starting Pentaho Metadata Editor CE.')
+def start_pme(download_store_path, product_name):
+    log.info('Starting Pentaho Metadata Editor - '+product_name+'.')
 
+    # Phase 0 - copy the workbench.bat file to the installation.
+    pme_installation = os.path.join(download_store_path, product_name,  'metadata-editor')
+    local_resource_psw_batch = os.path.join('.\\resource', 'pme', 'metadata-editor.bat')
+    log.debug('Location of ' + product_name + ' batch [' + local_resource_psw_batch + '].')
+    shutil.copy2(local_resource_psw_batch, pme_installation)
+    # Remove log file if exist
+    pme_log_file = os.path.join(pme_installation, 'metadataeditor.log')
+    if os.path.isfile(pme_log_file):
+        os.remove(pme_log_file)
 
-# -------------------------------------------------------
-#
-#                     Start PME EE
-#
-# -------------------------------------------------------
-def start_pme_ee(download_store_path):
-    log.info('Starting Pentaho Metadata Editor EE.')
+    # Phase 1 - Start workbench.
+    pme_script = os.path.join(download_store_path, product_name, 'metadata-editor', 'metadata-editor.bat')
+    pme_script = os.path.normpath(pme_script)
+    log.debug('Start script: [' + pme_script + ']')
+    pme_process = subprocess.Popen(pme_script.split(), shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    try:
+        pme_process.wait(timeout=60)
+    except subprocess.TimeoutExpired as te:
+        log.debug("Timeout expired - we kill the app.")
+
+    log.debug('Script executed. Return code [' + str(pme_process.returncode) + '].')
+    if pme_process.returncode != 0 and pme_process.returncode is not None:
+        log.debug('Something when wrong.')
+        exit(pme_process.returncode)
+    log.debug('Successful launched.')
+
+    # Phase 3 - Evaluate the logs
+    utils.kill_command_process(pme_process.pid)
+    process_output = pme_process.communicate()[0].decode(encoding='windows-1252').lower()
+
+    read.pme_logs(pme_installation, process_output)
 
 
 # -------------------------------------------------------
@@ -224,7 +247,7 @@ def start_psw(download_store_path, product_name):
     psw_script = os.path.join(download_store_path, product_name, 'schema-workbench', 'workbench.bat')
     psw_script = os.path.normpath(psw_script)
     log.debug('Start script: [' + psw_script + ']')
-    psw_process = subprocess.Popen(psw_script.split(), shell=True, stdout=subprocess.PIPE)
+    psw_process = subprocess.Popen(psw_script.split(), shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     try:
         psw_process.wait(timeout=15)
     except subprocess.TimeoutExpired as te:
@@ -266,9 +289,9 @@ def start_tool(product_name, product_dir):
     elif product_name in 'pad-ee':
         start_pad(product_dir, product_name)
     elif product_name in 'pme-ce':
-        start_pme_ce(product_dir)
+        start_pme(product_dir, product_name)
     elif product_name in 'pme-ee':
-        start_pme_ee(product_dir)
+        start_pme(product_dir, product_name)
     elif product_name in 'prd-ce':
         start_prd_ce(product_dir)
     elif product_name in 'prd-ee':
