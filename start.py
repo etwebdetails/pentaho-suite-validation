@@ -206,17 +206,41 @@ def start_pme(download_store_path, product_name):
 #                     Start PRD CE
 #
 # -------------------------------------------------------
-def start_prd_ce(download_store_path):
-    log.info('Starting Pentaho Report Designer CE.')
+def start_prd(download_store_path, product_name):
+    log.info('Starting Pentaho Report Designer '+ product_name + '.')
 
+    # Phase 0 - copy the report-designer.bat file to the installation.
+    prd_installation = os.path.join(download_store_path, product_name, 'report-designer')
+    local_resource_prd_batch = os.path.join('.\\resource', 'prd', 'report-designer.bat')
+    log.debug('Location of ' + product_name + ' batch [' + local_resource_prd_batch + '].')
+    shutil.copy2(local_resource_prd_batch, prd_installation)
 
-# -------------------------------------------------------
-#
-#                     Start PRD EE
-#
-# -------------------------------------------------------
-def start_prd_ee(download_store_path):
-    log.info('Starting Pentaho Report Designer EE.')
+    # Remove log file if exist
+    prd_log_file = os.path.join(prd_installation, 'reportdesigner.log')
+    if os.path.isfile(prd_log_file):
+        os.remove(prd_log_file)
+
+    # Phase 1 - Start workbench.
+    prd_script = os.path.join(download_store_path, product_name, 'report-designer', 'report-designer.bat')
+    prd_script = os.path.normpath(prd_script)
+    log.debug('Start script: [' + prd_script + ']')
+    prd_process = subprocess.Popen(prd_script.split(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        prd_process.wait(timeout=80)
+    except subprocess.TimeoutExpired as te:
+        log.debug("Timeout expired - we kill the app.")
+
+    log.debug('Script executed. Return code [' + str(prd_process.returncode) + '].')
+    if prd_process.returncode != 0 and prd_process.returncode is not None:
+        log.debug('Something when wrong.')
+        exit(prd_process.returncode)
+    log.debug('Successful launched.')
+
+    # Phase 3 - Evaluate the logs
+    utils.kill_command_process(prd_process.pid)
+    process_output = prd_process.communicate()[0].decode(encoding='windows-1252').lower()
+
+    read.prd_logs(prd_installation, process_output)
 
 
 # -------------------------------------------------------
@@ -283,7 +307,7 @@ def start_tool(product_name, product_dir):
     elif product_name in 'pdi-ce':
         start_pdi_ce(product_dir)
     elif product_name in 'pdi-ee':
-        start_pdi_ce(product_dir)
+        start_pdi_ee(product_dir)
     elif product_name in 'pad-ce':
         start_pad(product_dir, product_name)
     elif product_name in 'pad-ee':
@@ -293,9 +317,9 @@ def start_tool(product_name, product_dir):
     elif product_name in 'pme-ee':
         start_pme(product_dir, product_name)
     elif product_name in 'prd-ce':
-        start_prd_ce(product_dir)
+        start_prd(product_dir, product_name)
     elif product_name in 'prd-ee':
-        start_prd_ee(product_dir)
+        start_prd(product_dir, product_name)
     elif product_name in 'psw-ce':
         start_psw(product_dir, product_name)
     elif product_name in 'psw-ee':

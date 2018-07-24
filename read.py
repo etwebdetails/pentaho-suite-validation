@@ -170,6 +170,49 @@ def pme_logs(product_dir, proc_output):
 
 # -------------------------------------------------------
 #
+#                READING LOGS of PRD
+#
+# -------------------------------------------------------
+def prd_logs(product_dir, proc_output):
+    log.info('Reading ---Pentaho Report Designer logs---')
+
+    #read file 1
+    prd_log_file = os.path.join(product_dir, 'reportdesigner.log')
+    log.debug('Reading reportdesigner.log at [' + prd_log_file + ']')
+    fo_prd_logs = open(prd_log_file, "r")
+    read_prd_file = fo_prd_logs.read().lower()
+
+    exitcode_prd_logs = 0
+    if read_prd_file.find('error') == -1 and read_prd_file.find('exception') == -1:
+        log.info('[PRD] Report Designer started successfully.')
+        log.debug('[PRD] No Error message found.')
+    else:
+        log.error('[PRD] Report Designer started with errors check them:')
+        exitcode_prd_logs = -1
+    fo_prd_logs.close()
+
+    log.debug('---- 1: BEGIN LOGS ----')
+    log.debug(read_prd_file)
+    log.debug('---- 1: END LOGS ----')
+
+    # read output
+    exitcode_prd_logs2 = 0
+    if proc_output.find('error') == -1 and proc_output.find('exception') == -1:
+        log.info('[PRD] Report Designer started successfully.')
+        log.debug('[PRD] No Error message found.')
+    else:
+        log.error('[PRD] Report Designer started with errors check them:')
+        exitcode_prd_logs2 = -1
+
+    log.debug('---- 2: BEGIN LOGS ----')
+    log.debug(proc_output)
+    log.debug('---- 2: END LOGS ----')
+
+    exit(exitcode_prd_logs | exitcode_prd_logs2)
+
+
+# -------------------------------------------------------
+#
 #                      read_logs
 #
 # -------------------------------------------------------
