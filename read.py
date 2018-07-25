@@ -213,6 +213,49 @@ def prd_logs(product_dir, proc_output):
 
 # -------------------------------------------------------
 #
+#                READING LOGS of PDI
+#
+# -------------------------------------------------------
+def pdi_logs(product_dir, proc_output):
+    log.info('Reading ---Pentaho Data Integration logs---')
+
+    # read file 1
+    pdi_log_file = os.path.join(product_dir, 'dataintegration.log')
+    log.debug('Reading dataintegration.log at [' + pdi_log_file + ']')
+    fo_pdi_logs = open(pdi_log_file, "r")
+    read_pdi_file = fo_pdi_logs.read().lower()
+
+    exitcode_pdi_logs = 0
+    if read_pdi_file.find('error') == -1 and read_pdi_file.find('exception') == -1:
+        log.info('[PDI] Data Integration started successfully.')
+        log.debug('[PDI] No Error message found.')
+    else:
+        log.error('[PDI] Data Integration started with errors check them:')
+        exitcode_pdi_logs = -1
+    fo_pdi_logs.close()
+
+    log.debug('---- 1: BEGIN LOGS ----')
+    log.debug(read_pdi_file)
+    log.debug('---- 1: END LOGS ----')
+
+    # read output
+    exitcode_pdi_logs2 = 0
+    if proc_output.find('error') == -1 and proc_output.find('exception') == -1:
+        log.info('[PDI] Data Integration started successfully.')
+        log.debug('[PDI] No Error message found.')
+    else:
+        log.error('[PDI] Data Integration started with errors check them:')
+        exitcode_pdi_logs2 = -1
+
+    log.debug('---- 2: BEGIN LOGS ----')
+    log.debug(proc_output)
+    log.debug('---- 2: END LOGS ----')
+
+    exit(exitcode_pdi_logs | exitcode_pdi_logs2)
+
+
+# -------------------------------------------------------
+#
 #                      read_logs
 #
 # -------------------------------------------------------

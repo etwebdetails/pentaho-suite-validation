@@ -101,25 +101,48 @@ def start_pentaho_server_ee(download_store_path):
 
 # -------------------------------------------------------
 #
-#                     Start PDI CE
+#                     Start PDI
 #
 # -------------------------------------------------------
-def start_pdi_ce(download_store_path):
-    log.info('Starting Pentaho Data Integration CE.')
+def start_pdi(download_store_path, product_name):
+    log.info('Starting Pentaho Data Integration ' + product_name + '.')
+
+    # Phase 0 - copy the workbench.bat file to the installation.
+    pdi_installation = os.path.join(download_store_path, product_name,  'data-integration')
+    local_resource_pdi_batch = os.path.join('.\\resource', 'pdi', 'Spoon.bat')
+    log.debug('Location of ' + product_name + ' batch [' + local_resource_pdi_batch + '].')
+    shutil.copy2(local_resource_pdi_batch, pdi_installation)
+    # Remove log file if exist
+    pdi_log_file = os.path.join(pdi_installation, 'dataintegration.log')
+    if os.path.isfile(pdi_log_file):
+        os.remove(pdi_log_file)
+
+    # Phase 1 - Start Data Integration.
+    pdi_script = os.path.join(download_store_path, product_name, 'data-integration', 'Spoon.bat')
+    pdi_script = os.path.normpath(pdi_script)
+    log.debug('Start script: [' + pdi_script + ']')
+    pdi_process = subprocess.Popen(pdi_script.split(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        pdi_process.wait(timeout=390)
+    except subprocess.TimeoutExpired as te:
+        log.debug("Timeout expired - we kill the app.")
+
+    log.debug('Script executed. Return code [' + str(pdi_process.returncode) + '].')
+    if pdi_process.returncode != 0 and pdi_process.returncode is not None:
+        log.debug('Something when wrong.')
+        exit(pdi_process.returncode)
+    log.debug('Successful launched.')
+
+    # Phase 3 - Evaluate the logs
+    utils.kill_command_process(pdi_process.pid)
+    process_output = pdi_process.communicate()[0].decode(encoding='windows-1252').lower()
+
+    read.pdi_logs(pdi_installation, process_output)
 
 
 # -------------------------------------------------------
 #
-#                     Start PDI EE
-#
-# -------------------------------------------------------
-def start_pdi_ee(download_store_path):
-    log.info('Starting Pentaho Data Integration EE.')
-
-
-# -------------------------------------------------------
-#
-#                     Start PAD CE
+#                     Start PAD
 #
 # -------------------------------------------------------
 def start_pad(download_store_path, product_name):
@@ -162,7 +185,7 @@ def start_pad(download_store_path, product_name):
 
 # -------------------------------------------------------
 #
-#                     Start PME CE
+#                     Start PME
 #
 # -------------------------------------------------------
 def start_pme(download_store_path, product_name):
@@ -203,7 +226,7 @@ def start_pme(download_store_path, product_name):
 
 # -------------------------------------------------------
 #
-#                     Start PRD CE
+#                     Start PRD
 #
 # -------------------------------------------------------
 def start_prd(download_store_path, product_name):
@@ -226,7 +249,7 @@ def start_prd(download_store_path, product_name):
     log.debug('Start script: [' + prd_script + ']')
     prd_process = subprocess.Popen(prd_script.split(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
-        prd_process.wait(timeout=80)
+        prd_process.wait(timeout=90)
     except subprocess.TimeoutExpired as te:
         log.debug("Timeout expired - we kill the app.")
 
@@ -245,7 +268,7 @@ def start_prd(download_store_path, product_name):
 
 # -------------------------------------------------------
 #
-#                     Start PSW CE
+#                     Start PSW
 #
 # -------------------------------------------------------
 def start_psw(download_store_path, product_name):
@@ -305,9 +328,9 @@ def start_tool(product_name, product_dir):
     elif product_name in 'pentaho-server-ee':
         start_pentaho_server_ee(product_dir)
     elif product_name in 'pdi-ce':
-        start_pdi_ce(product_dir)
-    elif product_name in 'pdi-ee':
-        start_pdi_ee(product_dir)
+        start_pdi(product_dir, product_name)
+    elif product_name in 'pdi-ee-client':
+        start_pdi(product_dir, product_name)
     elif product_name in 'pad-ce':
         start_pad(product_dir, product_name)
     elif product_name in 'pad-ee':
