@@ -114,9 +114,7 @@ def get_download(branch, download_store_path, list_products):
             log.debug("Last downloaded version [" + str(latest_version) + '].')
 
             if require_version_check and (latest_version == build_info_version):
-                log.debug(
-                    'We do not need to download a new version. Latest [' + latest_version + '] and Current [' +
-                    build_info_version + ']')
+                log.debug('We do not need to download a new version. Latest [' + latest_version + '] and Current [' + build_info_version + ']')
                 need_download_new_build = False
 
             if need_download_new_build:
@@ -134,10 +132,10 @@ def get_download(branch, download_store_path, list_products):
                 store_directory = os.path.join(download_store_path, filename)
 
                 # Going to delete the folder of the artifact and the zip file
-                tmp_store_filename = os.path.join(download_store_path, os.path.splitext(filename)[0])
+                tmp_store_filename = os.path.join(download_store_path, filename) +  '.zip'
                 log.debug('Deleting previous artifacts.')
-                log.debug('Delete directory [' + store_directory + ']')
-                log.debug('Delete directory [' + tmp_store_filename + ']')
+                log.debug('Delete store directory [' + store_directory + ']')
+                log.debug('Delete zip file [' + tmp_store_filename + ']')
                 shutil.rmtree(store_directory, ignore_errors=True)
                 shutil.rmtree(tmp_store_filename, ignore_errors=True)
 
