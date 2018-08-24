@@ -3,7 +3,6 @@ import logging
 import utils
 import os
 import sys
-import shutil
 import urllib
 import wget
 
@@ -43,6 +42,8 @@ glist_download_artifacts = ['psw-ce']
 #                        'prd-ce',
 #                        'prd-ee',
 #                        'psw-ce',
+
+
 # -------------------------------------------------------
 #
 #                        DOWNLOAD
@@ -134,30 +135,27 @@ def get_download(branch, download_store_path, list_products):
                 # Going to delete the folder of the artifact and the zip file
                 tmp_store_filename = os.path.join(download_store_path, filename) +  '.zip'
                 log.debug('Deleting previous artifacts.')
+                # delete the folder - unzipped previously e.g. pentaho-server-ce
                 log.debug('Delete store directory [' + store_directory + ']')
+                utils.delete_dir(store_directory)
+                # delete the download zip previously e.g. pentaho-server-ce.zip
                 log.debug('Delete zip file [' + tmp_store_filename + ']')
-                shutil.rmtree(store_directory, ignore_errors=True)
-                shutil.rmtree(tmp_store_filename, ignore_errors=True)
-
+                utils.delete_file(tmp_store_filename)
                 download_url = site_url + filename + '.zip'
                 log.debug('Downloading file: [' + filename + '] [' + download_url + '].')
 
                 wget.download(download_url, download_store_path)
-
                 log.debug('Download completed!')
 
                 # Need to save in the file the download version
                 # We are using the CONTENT MANAGER that close the stream for us
                 with open(latest_build_file_path, "w+") as text_file:
                     print(build_info_version, file=text_file)
-                    log.debug(
-                        'Save on file [' + latest_build_file_path + '] the latest build version [' + build_info_version +
-                        '].')
+                    log.debug('Save on file [' + latest_build_file_path + '] the latest build version [' + build_info_version +'].')
 
                 utils.unzip_single_file(download_store_path, filename)
         except Exception as e:
             download_fail = True
             log.exception(e)
             break
-
 

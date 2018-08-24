@@ -96,3 +96,32 @@ def unzip_single_file(download_store_path, filename):
 def kill_command_process(ppid):
     subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=ppid))
     time.sleep(2)
+
+
+# -------------------------------------------------------
+#
+#                DELETE A DIRECTORY
+#
+# -------------------------------------------------------
+def delete_dir(dirname):
+    try:
+        for root, dirs, files in os.walk(dirname, topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
+        os.rmdir(dirname)
+    except FileNotFoundError as fnfe:
+        log.debug('Directory doesnt exist : [' + dirname + ']')
+
+
+# -------------------------------------------------------
+#
+#                DELETE A FILE
+#
+# -------------------------------------------------------
+def delete_file(filename):
+    try:
+        os.remove(filename)
+    except FileNotFoundError as fnfe:
+        log.debug('File doesnt exist : [' + filename + ']')
