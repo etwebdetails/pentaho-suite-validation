@@ -75,7 +75,7 @@ def start_pentaho_server_ce(download_store_path):
         log.debug('Pentaho server status: [' + str(http_code) + ']')
         if http_code == 200:
             log.debug('Pentaho server is READY.')
-            time.sleep(90)  # Wait some time for the Pentaho Server estabilished.
+            time.sleep(120)  # Wait some time for the Pentaho Server stabilize.
             break
         elif t == 360:
             log.debug('We reach the amount of tentatives to connect to Pentaho Server, but seems SHUTDOWN!!')
