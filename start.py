@@ -66,6 +66,10 @@ def start_pentaho_server_ce(download_store_path):
         log.debug('Something when wrong.')
         exit(return_code)
 
+    log.debug('Waiting some timing for server start-up!')
+    time.sleep(120)
+    log.debug('Stop waiting, lets check the server')
+
     url = 'http://localhost:8080/pentaho'
     # 360 => 6 minutes
     t = 0
